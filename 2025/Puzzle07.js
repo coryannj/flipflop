@@ -3,42 +3,42 @@ const input = fs.readFileSync('../inputs/flipflop/2025/puzzle07.txt',{ encoding:
 
 let lines = input.split(/[\r\n]/).map((x)=>x.split(' ').map(Number))
 
-console.log(lines)
+const allPaths = (grids) => {
+    let paths = 0
 
-let p1paths= 0
+    grids.forEach((g)=>{
+        let queue = {}
+        let start = g.map((x)=>x-1)
+        let startKey = start.join('-')
+        let endKey = start.map((x)=>0).join('-')
+        let dimensions = g.length
+        let step = Array(dimensions).fill(0).map((x)=>x)
+        let nextSteps = Array(dimensions).fill(step).map((x,i)=>x.with(i,-1))
 
-lines.forEach(([r,c])=>{
-    let col = Array(c).fill('.').map((x,i)=>0)
-    let grid = Array(r).fill('.').map((x)=>col.slice())
-    let start = [0,0]
-    let queue = {}
-    queue[`${r-1}-${c-1}`]=1
-    let visited = new Set()
+        queue[startKey]=1
+        
+        while(queue[endKey]===undefined){
+            let newQueue = {}
 
-    while(queue['0-0']===undefined){
-        let newQueue = {}
-        Object.entries(queue).forEach(([k,v])=>{
-            let [kr,kc] = k.split('-').map(Number)
-            visited.add(k)
-            
-            let nextArr = [[kr-1,kc],[kr,kc-1]].filter(([nr,nc])=>nr>=0 && nc>=0)
-            
-            //console.log('k,v,nextarr',k,v,nextArr)
-            
-            nextArr.forEach(([nr,nc])=>{
-                //if(!visited.has(`${nr}-${nc}`)){
-                    newQueue[`${nr}-${nc}`] = (newQueue[`${nr}-${nc}`] ?? 0)+v
-                //}
+            Object.entries(queue).forEach(([k,v])=>{
+                let point = k.split('-').map(Number)
+                let nextArr = nextSteps.map((x)=> x.map((y,yi)=>point[yi]+y)).filter((x)=>x.every((y)=>y>=0))
                 
+                nextArr.forEach((nx)=>{
+                    newQueue[nx.join('-')] = (newQueue[nx.join('-')] ?? 0)+v                
+                })
             })
-            //console.log(newQueue)
-        })
-        queue = newQueue
 
-    }
+            queue = newQueue
+        }
 
-    console.log('[r,c]',r,c,'queue is ',queue)
-    p1paths+=queue['0-0']
+        paths+=queue[endKey]
+    })
+    
+    return paths
 
-})
-console.log(p1paths)
+}
+
+console.log(allPaths(lines)) //Part 1
+console.log(allPaths(lines.map(([x,y])=>[x,y,x]))) //Part 2
+console.log(allPaths(lines.map(([x,y])=>Array(x).fill(y).map((z)=>z)))) //Part 3
